@@ -49,9 +49,26 @@ Expected outputs:
 
 ```text
 examples/synthetic_structural_mri.csv
+examples/demo_cv_classification_metrics.csv
+examples/demo_cv_fold_metrics.csv
+examples/demo_classification_metrics.csv
 figures/group_mean_similarity_matrices.svg
 figures/classification_performance.svg
 figures/cv_classification_performance.svg
+```
+
+## Evaluation Outputs
+
+The primary evaluation output is the stratified 5-fold cross-validation table:
+
+```text
+examples/demo_cv_classification_metrics.csv
+```
+
+The single train/test split table is kept as a quick demonstration of the pipeline:
+
+```text
+examples/demo_classification_metrics.csv
 ```
 
 ## Relation To Project Portfolio
