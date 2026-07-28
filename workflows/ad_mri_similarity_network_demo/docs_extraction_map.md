@@ -15,7 +15,9 @@ The original notebook mixes dataset auditing, exploratory plots, classical ML, S
 | Dataset availability and label checks | README/project page only | Private Excel-dependent logic was not included. |
 | Cortical thickness similarity matrix | `src/ad_mri_similarity_network/features.py` | Derived from `extract_features` and `extract_features_with_adjmat`. |
 | Cost thresholding | `features.py` | Converted into reusable helper functions. |
-| Node-level path length and degree features | `features.py` | Reimplemented without NetworkX to reduce dependencies. |
+| Node-level degree features | `features.py` | Reimplemented without NetworkX to reduce dependencies. |
+| Node-level path length features | `features.py` | Replaced by nodal efficiency. The thresholded networks separate into components, where a mean of distances is undefined for the unlinked pairs; efficiency averages inverse distances and stays defined. See the workflow README. |
+| Connection-cost search | `features.py` | The notebook searched a cost range for classification performance; the demo keeps the range sweep and reports network connectivity across it. |
 | Structural + network feature concatenation | `features.py` | Exposed through `build_feature_sets`. |
 | HC vs AD classifier evaluation | `src/ad_mri_similarity_network/models.py` | Public demo uses minimal numpy classifiers instead of scikit-learn. |
 | Group mean similarity matrix visualization | `src/ad_mri_similarity_network/plotting.py` | Implemented as dependency-light SVG generation. |

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import numpy as np
 import pandas as pd
 
@@ -69,17 +71,63 @@ def _shortest_paths_from(binary: np.ndarray, source: int) -> np.ndarray:
     return distances
 
 
-def _node_path_lengths(binary: np.ndarray) -> list[float]:
+def _node_efficiencies(binary: np.ndarray) -> list[float]:
+    """Nodal efficiency ``NE_i``: mean inverse shortest path length.
+
+    ``NE_i = sum_{j != i} (1 / L_ij) / (V - 1)`` (Latora and Marchiori, 2001).
+    Every node is averaged over the same ``V - 1`` others, and a pair with no
+    path between it contributes ``1 / inf = 0``, so the measure is defined
+    whether or not the network separates into components. This is why it is
+    used for cortical thickness networks, which are not guaranteed to be
+    connected at a given connection cost (He et al., 2009). A region with no
+    connections receives ``NE_i = 0``, the lowest attainable value.
+    """
+
     n_nodes = binary.shape[0]
     values: list[float] = []
     for node in range(n_nodes):
         distances = _shortest_paths_from(binary, source=node)
-        finite = distances[np.isfinite(distances)]
-        if len(finite) <= 1:
-            values.append(0.0)
-        else:
-            values.append(float(np.mean(finite)))
+        others = np.delete(distances, node)
+        with np.errstate(divide="ignore"):
+            inverse = np.where(np.isfinite(others), 1.0 / others, 0.0)
+        values.append(float(inverse.mean()))
     return values
+
+
+def _component_labels(binary: np.ndarray) -> np.ndarray:
+    """Connected-component index for every node."""
+
+    n_nodes = binary.shape[0]
+    labels = np.full(n_nodes, -1, dtype=int)
+    current = 0
+    for node in range(n_nodes):
+        if labels[node] != -1:
+            continue
+        reachable = np.isfinite(_shortest_paths_from(binary, source=node))
+        labels[reachable] = current
+        current += 1
+    return labels
+
+
+def connectivity_summary(binary_networks: np.ndarray) -> dict[str, float]:
+    """Describe how well connected a set of binary networks is.
+
+    Nodal path length assumes that nodes are mutually reachable, so these
+    diagnostics indicate the cost values at which ``NL`` can be interpreted as
+    an average distance rather than a property of a small component.
+    """
+
+    components = np.array(
+        [len(np.unique(_component_labels(net))) for net in binary_networks],
+        dtype=float,
+    )
+    degrees = binary_networks.sum(axis=2)
+    return {
+        "mean_degree": float(degrees.mean()),
+        "isolated_node_fraction": float((degrees == 0).mean()),
+        "connected_subject_fraction": float((components == 1).mean()),
+        "mean_components": float(components.mean()),
+    }
 
 
 def build_similarity_networks(
@@ -97,8 +145,8 @@ def build_similarity_networks(
     binary_networks:
         Cost-thresholded binary networks with the same shape.
     network_features:
-        Node-level mean shortest path length and degree, concatenated as
-        ``[NL_region_1..N, ND_region_1..N]``.
+        Node-level efficiency and degree, concatenated as
+        ``[NE_region_1..N, ND_region_1..N]``.
     feature_names:
         Names for the network feature columns.
     """
@@ -116,14 +164,14 @@ def build_similarity_networks(
     for thickness in thickness_values:
         weighted = _similarity_from_thickness(thickness, alpha=alpha)
         binary = _threshold_by_cost(weighted, cost=cost)
-        node_lengths = _node_path_lengths(binary)
-        node_degrees = binary.sum(axis=1).astype(float).tolist()
+        node_efficiencies = np.asarray(_node_efficiencies(binary), dtype=float)
+        node_degrees = binary.sum(axis=1).astype(float)
 
         weighted_networks.append(weighted)
         binary_networks.append(binary)
-        network_features.append(node_lengths + node_degrees)
+        network_features.append(np.concatenate([node_efficiencies, node_degrees]))
 
-    feature_names = [f"{region}_NL" for region in regions] + [
+    feature_names = [f"{region}_NE" for region in regions] + [
         f"{region}_ND" for region in regions
     ]
 
@@ -162,4 +210,31 @@ def build_feature_sets(
         "network_feature_names": network_names,
         "all_features": all_features,
         "all_feature_names": structural_names + network_names,
+        "connectivity": connectivity_summary(binary),
     }
+
+
+def sweep_costs(
+    df: pd.DataFrame,
+    costs: Sequence[float],
+    alpha: float = 0.01,
+    regions: list[str] | None = None,
+) -> pd.DataFrame:
+    """Report network connectivity across a range of connection costs.
+
+    Zhang et al. (2021) note that no single sparsity threshold is preferred and
+    therefore examine a range of costs. Reporting connectivity over that range
+    shows where nodal path length is defined on a connected network rather than
+    within isolated components.
+    """
+
+    if regions is None:
+        regions = infer_regions(df)
+
+    rows = []
+    for cost in costs:
+        _, binary, _, _ = build_similarity_networks(
+            df, cost=cost, alpha=alpha, regions=regions
+        )
+        rows.append({"cost": cost, **connectivity_summary(binary)})
+    return pd.DataFrame(rows)

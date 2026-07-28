@@ -17,18 +17,43 @@ def generate_synthetic_structural_data(
     """
 
     rng = np.random.default_rng(random_state)
-    regions = [
-        "lh_entorhinal",
-        "lh_inferiortemporal",
-        "lh_precuneus",
-        "lh_lateralorbitofrontal",
-        "lh_superiorfrontal",
-        "rh_entorhinal",
-        "rh_inferiortemporal",
-        "rh_precuneus",
-        "rh_lateralorbitofrontal",
-        "rh_superiorfrontal",
-    ]
+    structures = (
+        "bankssts",
+        "caudalanteriorcingulate",
+        "caudalmiddlefrontal",
+        "cuneus",
+        "entorhinal",
+        "fusiform",
+        "inferiorparietal",
+        "inferiortemporal",
+        "isthmuscingulate",
+        "lateraloccipital",
+        "lateralorbitofrontal",
+        "lingual",
+        "medialorbitofrontal",
+        "middletemporal",
+        "parahippocampal",
+        "paracentral",
+        "parsopercularis",
+        "parsorbitalis",
+        "parstriangularis",
+        "pericalcarine",
+        "postcentral",
+        "posteriorcingulate",
+        "precentral",
+        "precuneus",
+        "rostralanteriorcingulate",
+        "rostralmiddlefrontal",
+        "superiorfrontal",
+        "superiorparietal",
+        "superiortemporal",
+        "supramarginal",
+        "frontalpole",
+        "temporalpole",
+        "transversetemporal",
+        "insula",
+    )
+    regions = [f"{hemi}_{name}" for hemi in ("lh", "rh") for name in structures]
 
     rows = []
     for group_label, n_group in [(0, n_controls), (3, n_ad)]:

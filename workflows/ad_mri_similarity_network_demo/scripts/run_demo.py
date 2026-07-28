@@ -15,6 +15,7 @@ from ad_mri_similarity_network import (  # noqa: E402
     evaluate_binary_classifier,
     evaluate_binary_classifier_cv,
     generate_synthetic_structural_data,
+    sweep_costs,
 )
 from ad_mri_similarity_network.plotting import (  # noqa: E402
     plot_cv_performance_table,
@@ -33,7 +34,12 @@ def main() -> None:
     sample_path = examples_dir / "synthetic_structural_mri.csv"
     df.to_csv(sample_path, index=False)
 
-    features = build_feature_sets(df, cost=0.25, alpha=0.01)
+    connectivity = sweep_costs(df, costs=[0.10, 0.25, 0.40, 0.55, 0.70])
+    connectivity_path = examples_dir / "demo_cost_connectivity.csv"
+    connectivity.to_csv(connectivity_path, index=False)
+
+    cost = 0.25
+    features = build_feature_sets(df, cost=cost, alpha=0.01)
     y = df["diagnosis"].to_numpy()
 
     rows = []
@@ -90,8 +96,19 @@ def main() -> None:
     )
 
     print("Saved synthetic data:", sample_path)
+    print("Saved connectivity sweep:", connectivity_path)
     print("Saved metrics:", performance_path)
     print("Saved CV metrics:", cv_performance_path)
+    print("\nNetwork connectivity across connection costs:")
+    print(connectivity.to_string(index=False))
+    selected = features["connectivity"]
+    print(
+        f"\nFeatures built at cost={cost}. Networks at this cost separate into "
+        f"{selected['mean_components']:.1f} components on average and "
+        f"{selected['isolated_node_fraction']:.2%} of regions are unconnected; nodal "
+        "efficiency stays defined in both cases."
+    )
+    print()
     print(performance[["feature_set", "model", "accuracy", "sensitivity", "specificity", "auc", "f1"]])
     print(cv_performance[["feature_set", "model", "accuracy_mean", "sensitivity_mean", "specificity_mean", "auc_mean", "f1_mean"]])
 
