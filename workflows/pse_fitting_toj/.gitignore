@@ -1,0 +1,18 @@
+# --- 비공개: 원자료 / 전처리 / 검증용 (사람 대상 데이터) ---
+data/
+_original_reference/
+experiment/
+preprocess.py
+
+# --- 생성물: 결과는 커밋 안 함 (outputs 폴더 구조만 유지) ---
+outputs/*
+!outputs/.gitkeep
+
+# --- 잡파일 ---
+.DS_Store
+**/.DS_Store
+__pycache__/
+**/__pycache__/
+*.pyc
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/

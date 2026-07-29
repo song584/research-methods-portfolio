@@ -112,9 +112,9 @@ def _component_labels(binary: np.ndarray) -> np.ndarray:
 def connectivity_summary(binary_networks: np.ndarray) -> dict[str, float]:
     """Describe how well connected a set of binary networks is.
 
-    Nodal path length assumes that nodes are mutually reachable, so these
-    diagnostics indicate the cost values at which ``NL`` can be interpreted as
-    an average distance rather than a property of a small component.
+    Connection cost controls how many links survive thresholding, and with it
+    whether a network stays in one piece. These diagnostics report that, so the
+    structure the nodal measures are computed on is visible alongside them.
     """
 
     components = np.array(
@@ -224,8 +224,7 @@ def sweep_costs(
 
     Zhang et al. (2021) note that no single sparsity threshold is preferred and
     therefore examine a range of costs. Reporting connectivity over that range
-    shows where nodal path length is defined on a connected network rather than
-    within isolated components.
+    shows how much of the network structure survives each threshold.
     """
 
     if regions is None:
