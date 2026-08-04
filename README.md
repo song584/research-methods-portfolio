@@ -15,6 +15,7 @@ The current focus is not to expose private study data. Instead, each workflow us
 | --- | --- | --- |
 | `projects/alzheimer_morphological_similarity_network/` | `workflows/ad_mri_similarity_network_demo/` | Structural MRI feature handling, cortical similarity networks, graph features, classifier evaluation, and stratified 5-fold cross-validation. |
 | `projects/temporal_order_judgment_pse/` | `workflows/pse_fitting_toj/` | Psychometric function fitting of temporal order judgments, point of subjective equality estimation, bootstrap goodness-of-fit, and condition-wise summaries. |
+| `projects/adolescent_impulsivity_salience_network/` | `workflows/lmm_behavioral_imt/` | Linear mixed-effects modelling of repeated-measures task performance, Type III tests, estimated marginal means, contrasts, and effect sizes. |
 
 ## Workflows
 
@@ -25,6 +26,7 @@ run instructions. They differ in what they need to run:
 | --- | --- | --- |
 | `ad_mri_similarity_network_demo/` | Python | `numpy`, `pandas` |
 | `pse_fitting_toj/` | MATLAB + Python | MATLAB with the Palamedes toolbox; `pandas`, `numpy`, `matplotlib`, `seaborn`, `openpyxl` |
+| `lmm_behavioral_imt/` | R | `tidyverse`, `lme4`, `lmerTest`, `broom.mixed`, `emmeans`, `gridExtra` |
 
 The MRI workflow ships synthetic data and runs end to end:
 

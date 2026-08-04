@@ -1,0 +1,17 @@
+# --- 비공개: 원자료 / 참가자 정보 ---
+data/
+_original_reference/
+
+# --- 생성물: 입력 CSV 와 결과는 커밋하지 않음 (폴더 구조만 유지) ---
+outputs/*
+!outputs/.gitkeep
+
+# --- R 작업 흔적 ---
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# --- 잡파일 ---
+.DS_Store
+**/.DS_Store
