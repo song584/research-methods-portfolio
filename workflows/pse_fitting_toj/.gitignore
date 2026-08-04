@@ -1,14 +1,13 @@
-# --- 비공개: 원자료 / 전처리 / 검증용 (사람 대상 데이터) ---
+# Participant data, preprocessing, experiment program
 data/
 _original_reference/
 experiment/
 preprocess.py
 
-# --- 생성물: 결과는 커밋 안 함 (outputs 폴더 구조만 유지) ---
+# Inputs and results stay local; keep the folder
 outputs/*
 !outputs/.gitkeep
 
-# --- 잡파일 ---
 .DS_Store
 **/.DS_Store
 __pycache__/

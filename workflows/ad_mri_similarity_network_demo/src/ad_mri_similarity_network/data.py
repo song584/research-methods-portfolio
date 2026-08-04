@@ -11,9 +11,9 @@ def generate_synthetic_structural_data(
 ) -> pd.DataFrame:
     """Create a synthetic FreeSurfer-like regional structural MRI table.
 
-    The generated values are not based on real participants. They only mimic the
-    column layout used by the cleaned analysis pipeline: regional cortical
-    thickness, volume, and surface area plus a binary diagnosis label.
+    Values are made up. They follow the column layout the pipeline expects —
+    regional thickness, volume, and surface area plus a diagnosis label — with
+    a temporal-lobe effect in the AD group.
     """
 
     rng = np.random.default_rng(random_state)

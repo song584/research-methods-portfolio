@@ -1,76 +1,86 @@
-# PSE 피팅 분석 (시간순서판단 / TOJ)
+# PSE Fitting for Temporal Order Judgments
 
-시간순서판단(TOJ) 과제에서 참가자별·조건별 **PSE(주관적 동시점, Point of Subjective Equality)** 를 심리측정함수 피팅으로 추정하고, 그 결과를 정리·시각화하는 코드입니다.
+Estimates the point of subjective equality (PSE) for each participant and
+condition in a temporal order judgment task by fitting a psychometric function,
+then summarises and plots the estimates.
 
-입력은 조건별 반응 집계표(`numpos.csv`) 하나이며, **원자료 전처리는 포함하지 않습니다**(데이터마다 형식이 달라 각자 준비).
+The input is a single table of response counts (`numpos.csv`). Preprocessing of
+raw response logs is not included, since its shape depends on how the task was
+run.
 
-## 폴더 구조
+## Contents
 
 ```
 .
 ├── README.md
-├── INPUT_FORMAT.md         입력 파일(numpos.csv) 형식 명세
-├── numpos_example.csv      입력 예시(템플릿)
-├── fit_pse.m               numpos.csv → 누적정규 피팅 → PSE   (MATLAB + Palamedes)
-├── goodness_of_fit.m       피팅 적합도 평가 (bootstrap)        (MATLAB + Palamedes)
-├── after_pse_analysis.py   PSE 정리·요약표·막대그래프          (Python)
-└── outputs/                실행 결과 + 입력 numpos.csv 를 두는 곳
+├── INPUT_FORMAT.md         input file specification
+├── numpos_example.csv      example input
+├── fit_pse.m               numpos.csv -> cumulative-normal fit -> PSE   (MATLAB + Palamedes)
+├── goodness_of_fit.m       bootstrap goodness-of-fit                    (MATLAB + Palamedes)
+├── after_pse_analysis.py   PSE cleanup, summary table, bar plots        (Python)
+└── outputs/                where the input goes and results are written
 ```
 
-## 입력
+## Input
 
-피팅의 입력은 **`numpos.csv`** 하나입니다 — 각 (참가자 × 조건)마다 7개 자극수준에서의 "양성 반응" 개수(NumPos)를 담은 표.
+`numpos.csv` holds, for each participant and condition, the number of positive
+responses at each of seven stimulus levels.
 
-- 형식 명세: **[`INPUT_FORMAT.md`](./INPUT_FORMAT.md)**
-- 예시/템플릿: **[`numpos_example.csv`](./numpos_example.csv)**
-- 두는 곳: `outputs/numpos.csv` (또는 `fit_pse.m` 의 `in_csv` 경로 수정)
+- Specification: [`INPUT_FORMAT.md`](./INPUT_FORMAT.md)
+- Template: [`numpos_example.csv`](./numpos_example.csv)
+- Location: `outputs/numpos.csv`, or change `in_csv` in `fit_pse.m`
 
-> 원자료 → `numpos.csv` 전처리는 이 저장소에 포함돼 있지 않습니다. 본인 데이터를 위 형식으로만 맞추면 됩니다.
+## Requirements
 
-## 요구사항
+- MATLAB with the [Palamedes toolbox](http://www.palamedestoolbox.org) for fitting
+- Python with `pandas`, `numpy`, `matplotlib`, `seaborn`, `openpyxl` for the summaries
 
-- **MATLAB + [Palamedes toolbox](http://www.palamedestoolbox.org)** — 피팅
-- **Python** (pandas, numpy, matplotlib, seaborn, openpyxl) — 그래프
+## Running
 
-## 실행
+1. Put `numpos.csv` in `outputs/`.
+2. In MATLAB, add Palamedes to the path: `addpath(genpath('<Palamedes>'))`
+3. Fit: `run fit_pse.m` → `outputs/pse_results.csv`
+4. Goodness of fit: `run goodness_of_fit.m` → `outputs/pdev_results.csv`
+5. Summaries: `python after_pse_analysis.py` → `outputs/summary_pse.xlsx`, `outputs/figures/*.png`
 
-1. 입력 `numpos.csv` 를 `outputs/` 에 둔다.
-2. MATLAB 에서 Palamedes 경로 추가: `addpath(genpath('<Palamedes 경로>'))`
-3. 피팅: `run fit_pse.m` → `outputs/pse_results.csv`
-4. 적합도: `run goodness_of_fit.m` → `outputs/pdev_results.csv`
-5. 이후 분석: `python after_pse_analysis.py` → `outputs/summary_pse.xlsx`, `outputs/figures/*.png`
+To try it out, copy `numpos_example.csv` to `outputs/numpos.csv` and run step 3.
 
-> 빠른 테스트: `numpos_example.csv` 를 `outputs/numpos.csv` 로 복사한 뒤 3번 실행.
-
-## 피팅 설정 (`fit_pse.m`)
+## Fitting settings
 
 ```matlab
-StimLevels  = [-42 -28 -14 0 14 28 42];   % 자극수준(ms); numpos.csv 의 k1..k7 순서와 대응
-OutOfNum    = [20 20 20 20 20 20 20];      % 수준당 시행 수
-PF          = @PAL_CumulativeNormal;       % 누적정규
-paramsFree  = [1 1 0 0];                    % 역치·기울기만 자유, 추측률 0 / 실수율 0.01 고정
+StimLevels  = [-42 -28 -14 0 14 28 42];   % stimulus onset asynchrony (ms)
+OutOfNum    = [20 20 20 20 20 20 20];     % trials per level
+PF          = @PAL_CumulativeNormal;
+paramsFree  = [1 1 0 0];                  % threshold and slope free; guess 0, lapse 0.01 fixed
 searchGrid.alpha = -42:0.1:42;
 searchGrid.beta  = 10.^(-2.5:0.001:1.5);
 ```
 
-PSE 는 `PAL_CumulativeNormal([alpha beta 0 0.01], 0.5, 'inverse')` 로 구합니다.
-**StimLevels 의 부호가 PSE 부호 규약을 결정**합니다 — 결과 부호가 기대와 반대면 StimLevels 부호를 뒤집으세요.
+PSE is the stimulus value where the fitted function reaches 0.5, obtained from
+`PAL_CumulativeNormal([alpha beta 0 0.01], 0.5, 'inverse')`. The sign convention
+of `StimLevels` sets the sign of the PSE, so flip it if the estimates come out
+opposite to what the task design implies.
 
-## 출력 / 결과 정리
+## Outputs
 
-- `pse_results.csv` — 참가자 × 조건별 `alpha, beta, LL, exitflag, PSE`
-- `pdev_results.csv` — 적합도 `pDev` (작을수록 적합 불량; 예: `< .05` 면 제외 검토)
-- `after_pse_analysis.py` — PSE 를 정리해 요약표/그래프 생성. 상단 옵션으로 정리 기준 조절:
-  - `PSE_ABS_LIMIT`, `DROP_NONFINITE` — 자극범위 밖·`Inf`·`NaN` 등 실패한 피팅 제외
-  - `EXCEPT_NONE`, `EXCLUDE_PARTICIPANTS` — 기저선/특정 참가자 제외
+| File | Contents |
+| --- | --- |
+| `pse_results.csv` | `alpha`, `beta`, `LL`, `exitflag`, `PSE` per participant and condition |
+| `pdev_results.csv` | bootstrap `pDev`; small values indicate poor fit |
+| `summary_pse.xlsx`, `pse_long.csv` | condition summaries and the cleaned estimates |
+| `figures/pse_by_confront.png`, `figures/pse_by_stim_type.png` | condition bar plots |
 
-## 연구 맥락
+`after_pse_analysis.py` drops failed fits and applies exclusions through options
+at the top of the file: `PSE_ABS_LIMIT` and `DROP_NONFINITE` remove estimates
+outside the stimulus range or non-finite values, `EXCEPT_NONE` and
+`EXCLUDE_PARTICIPANTS` remove a baseline condition or specific participants.
 
-이 워크플로가 나온 연구의 배경과 역할은 프로젝트 페이지에 정리돼 있습니다:
+## Study context
+
+The background to this analysis is described in the project page:
 
 ```text
 projects/temporal_order_judgment_pse/
 ```
 
-원자료, 전처리, 실험 프로그램은 포함하지 않습니다. 입력 형식만 맞추면 다른
-데이터에도 그대로 쓸 수 있습니다.
+Raw responses, preprocessing, and the experiment program are not included.

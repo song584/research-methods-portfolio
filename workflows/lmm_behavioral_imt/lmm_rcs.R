@@ -1,24 +1,19 @@
-## lmm_rcs.R -- rate correct score across task
+## Rate correct score across task.
 ##
-## Model: measure ~ task + Gender + Age + (1 | subject)
-##
-## The rate correct score combines accuracy and speed into one value per task,
-## so it is defined for target trials only. There is no stimulus factor and
-## therefore no interaction term; task is compared directly.
-##
-## Run: Rscript lmm_rcs.R      (from this folder)
+## The score combines accuracy and speed into one value per task and is defined
+## on target trials only, so there is no stimulus factor.
 
 source("lmm_common.R")
 
 INPUT <- file.path("outputs", "rcs_long.csv")
 TAG   <- "rcs"
 
-dat <- read_behavioural(INPUT, measure_col = "trans1", scale = 1)
+dat <- read_behavioural(INPUT, measure_col = "trans1")
 
 model <- lmer(measure ~ task + Gender + Age + (1 | subject), data = dat)
 
-anova_tbl  <- type3_anova(model)
-fixed_tbl  <- fixed_effects(model)
+anova_tbl <- type3_anova(model)
+fixed_tbl <- fixed_effects(model)
 
 emm          <- emmeans(model, ~ task)
 emmeans_tbl  <- marginal_means(emm)

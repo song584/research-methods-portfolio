@@ -1,51 +1,47 @@
-# 입력 형식
+# Input format
 
-각 스크립트는 `outputs/` 에 놓인 **long-form CSV** 하나를 읽습니다. 한 행이
-"참가자 × 조건" 하나이며, 참가자마다 여러 행이 있습니다.
+Each script reads one long-form CSV from `outputs/`. A row is one participant
+in one condition.
 
-| 스크립트 | 읽는 파일 | 행 구성 |
+| Script | Reads | Rows per participant |
 | --- | --- | --- |
-| `lmm_error_rate.R` | `outputs/error_rate_long.csv` | 참가자 × 과제(3) × 자극(2) = 6행 |
-| `lmm_rt.R` | `outputs/rt_long.csv` | 참가자 × 과제(3) × 자극(2) = 6행 |
-| `lmm_rcs.R` | `outputs/rcs_long.csv` | 참가자 × 과제(3) = 3행 |
+| `lmm_error_rate.R` | `outputs/error_rate_long.csv` | 3 tasks × 2 stimulus types = 6 |
+| `lmm_rt.R` | `outputs/rt_long.csv` | 3 tasks × 2 stimulus types = 6 |
+| `lmm_rcs.R` | `outputs/rcs_long.csv` | 3 tasks = 3 |
 
-## 필수 열
+## Columns
 
-| 열 | 형식 | 설명 |
+| Column | Values | Meaning |
 | --- | --- | --- |
-| `id` | 정수/문자 | 참가자 식별자. 임의값이어도 되며 참가자 내에서 일정해야 함 |
-| `task` | 1 / 2 / 3 | 1 = IMT, 2 = DMT, 3 = SMT |
-| `stimulus` | 1 / 2 | 1 = Target, 2 = Catch. **RCS 파일에는 없음** |
-| `Gender` | 1 / 2 | **1 = 남성, 2 = 여성**. `Sex` 라는 이름도 허용 |
-| `Age` | 수치 | 연 단위 |
-| `trans1` | 수치 | 분석 대상 값. 결측은 `9999` |
+| `id` | integer or string | Participant identifier, constant within participant |
+| `task` | 1, 2, 3 | 1 = IMT, 2 = DMT, 3 = SMT |
+| `stimulus` | 1, 2 | 1 = target, 2 = catch. Absent from the RCS file |
+| `Gender` | 1, 2 | 1 = male, 2 = female. May also be named `Sex` |
+| `Age` | numeric | Years |
+| `trans1` | numeric | The outcome value; 9999 marks a missing response |
 
-`Gender` 는 `Sex`, `gender`, `sex` 중 아무 이름이나 인식하며, 값은 **반드시
-1 = 남성 / 2 = 여성** 이어야 합니다. 다른 코딩(예: 0/1)을 쓰는 자료라면 미리
-1/2 로 바꿔서 넣으세요.
+The sex column may be named `Gender`, `Sex`, `gender`, or `sex`, but the values
+must be 1 for male and 2 for female. Recode other schemes before running.
 
-`trans1` 이 담는 값은 스크립트마다 다릅니다.
+What `trans1` holds depends on the script:
 
-- 오류율: 전체 시행 중 오반응 비율
-- 반응시간: 표적은 정반응, 캐치는 오경보의 반응시간(ms)
-- RCS: 정반응 비율을 평균 반응시간으로 나눈 값
+- error rate: proportion of trials answered incorrectly
+- reaction time: correct responses on target trials, false alarms on catch trials, in milliseconds
+- rate correct score: proportion correct divided by mean reaction time
 
-## 결측 처리
+## Missing values
 
-`trans1` 이 `9999` 인 행은 결측으로 보고 제외합니다. `Gender`·`task`·
-`stimulus` 에 결측이 있으면 스크립트가 중단됩니다 — 조용히 일부 참가자가
-빠지는 일을 막기 위해서입니다.
+Rows where `trans1` is 9999 are dropped. Missing values in `Gender`, `task`, or
+`stimulus` stop the script instead, so that participants are not quietly left
+out of the model.
 
-## 예시
+## Example
 
-`example_error_rate_long.csv` 가 형식 예시입니다(가상의 값).
+`example_error_rate_long.csv` shows the layout with made-up values:
 
 ```
 id,task,stimulus,Gender,Age,trans1
-P001,1,1,1,15,0.050
-P001,1,2,1,15,0.120
-P001,2,1,1,15,0.083
-...
+P001,1,1,1,15,0.0507
+P001,1,2,1,15,0.1422
+P001,2,1,1,15,0.0753
 ```
-
-본인 자료를 이 형식으로 맞춘 뒤 `outputs/` 에 위 표의 이름으로 두면 됩니다.

@@ -1,25 +1,20 @@
-## lmm_rt.R -- reaction time across task and stimulus type
+## Reaction time across task and stimulus type.
 ##
-## Model: measure ~ stimulus * task + Gender + Age + (1 | subject)
-##
-## Reaction times are taken from correct responses on target trials and from
-## false alarms on catch trials, so the same crossed design as the error-rate
-## analysis applies.
-##
-## Run: Rscript lmm_rt.R      (from this folder)
+## Times come from correct responses on target trials and from false alarms on
+## catch trials.
 
 source("lmm_common.R")
 
 INPUT <- file.path("outputs", "rt_long.csv")
 TAG   <- "rt"
 
-dat <- read_behavioural(INPUT, measure_col = "trans1", scale = 1)
+dat <- read_behavioural(INPUT, measure_col = "trans1")
 
 model <- lmer(measure ~ stimulus * task + Gender + Age + (1 | subject),
               data = dat)
 
-anova_tbl  <- type3_anova(model)
-fixed_tbl  <- fixed_effects(model)
+anova_tbl <- type3_anova(model)
+fixed_tbl <- fixed_effects(model)
 
 emm          <- emmeans(model, ~ task | stimulus)
 emmeans_tbl  <- marginal_means(emm)
@@ -29,10 +24,10 @@ task_by_stim_tbl <- emmeans::joint_tests(model, by = "stimulus") %>%
   as.data.frame() %>%
   dplyr::filter(`model term` == "task") %>%
   dplyr::transmute(
-    Stimulus = stimulus,
-    Effect   = `model term`,
-    NumDF    = df1,
-    DenDF    = df2,
+    Stimulus  = stimulus,
+    Effect    = `model term`,
+    NumDF     = df1,
+    DenDF     = df2,
     `F value` = round(F.ratio, 3),
     `Pr(>F)`  = round(p.value, 4)
   )

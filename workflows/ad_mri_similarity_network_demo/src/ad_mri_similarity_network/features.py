@@ -72,15 +72,11 @@ def _shortest_paths_from(binary: np.ndarray, source: int) -> np.ndarray:
 
 
 def _node_efficiencies(binary: np.ndarray) -> list[float]:
-    """Nodal efficiency ``NE_i``: mean inverse shortest path length.
+    """Nodal efficiency ``NE_i = sum_{j != i} (1 / L_ij) / (V - 1)``.
 
-    ``NE_i = sum_{j != i} (1 / L_ij) / (V - 1)`` (Latora and Marchiori, 2001).
-    Every node is averaged over the same ``V - 1`` others, and a pair with no
-    path between it contributes ``1 / inf = 0``, so the measure is defined
-    whether or not the network separates into components. This is why it is
-    used for cortical thickness networks, which are not guaranteed to be
-    connected at a given connection cost (He et al., 2009). A region with no
-    connections receives ``NE_i = 0``, the lowest attainable value.
+    Unlinked pairs contribute ``1 / inf = 0``, so the measure holds up when a
+    network separates into components (Latora and Marchiori, 2001; He et al.,
+    2009). A node with no connections gets 0.
     """
 
     n_nodes = binary.shape[0]
@@ -110,11 +106,10 @@ def _component_labels(binary: np.ndarray) -> np.ndarray:
 
 
 def connectivity_summary(binary_networks: np.ndarray) -> dict[str, float]:
-    """Describe how well connected a set of binary networks is.
+    """Summarise how well connected a set of binary networks is.
 
-    Connection cost controls how many links survive thresholding, and with it
-    whether a network stays in one piece. These diagnostics report that, so the
-    structure the nodal measures are computed on is visible alongside them.
+    Connection cost decides how many links survive thresholding, and with it
+    whether a network stays in one piece.
     """
 
     components = np.array(
@@ -223,8 +218,7 @@ def sweep_costs(
     """Report network connectivity across a range of connection costs.
 
     Zhang et al. (2021) note that no single sparsity threshold is preferred and
-    therefore examine a range of costs. Reporting connectivity over that range
-    shows how much of the network structure survives each threshold.
+    examine a range instead.
     """
 
     if regions is None:
